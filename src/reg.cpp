@@ -32,6 +32,7 @@ string calRang(Scalar& meanCor)
 {
     //造了一个像素点的图像，颜色就是那个平均值
     Mat colorMat(1, 1, CV_8UC3, meanCor);
+    cvtColor(colorMat,colorMat,COLOR_BGR2HSV);
     for(int i = 0; i < 3; i ++)cout << meanCor[i] << ' ';
     cout << endl;
     Mat mask;
@@ -71,7 +72,7 @@ string calRang(Scalar& meanCor)
 void color(Mat orig, Mat gre)
 {
     Mat prfix;
-    Canny(gre, prfix, 100, 255);
+    Canny(gre, prfix, 150, 250);
     //存轮廓点，到时候就处理这些轮廓
     vector<vector<Point>>prfix_ps;
     findContours(prfix, prfix_ps, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
@@ -88,7 +89,7 @@ void color(Mat orig, Mat gre)
         }
     }
     Mat mask = Mat::zeros(orig.size(), CV_8U);//造个膜mask
-    drawContours(mask, prfix_ps, idx, cv::Scalar(255), cv::FILLED);//填充为白色
+    drawContours(mask, prfix_ps, idx, Scalar(255), FILLED);//填充为白色
     imshow("mask", mask);
     Scalar meanCor = mean(orig, mask);//原图像计算颜色平均值
     cout << calRang(meanCor) << endl;
