@@ -28,6 +28,26 @@ auto Mablu = Scalar(124, 255, 255);
 auto Miplu = Scalar(125, 43, 46);
 auto Maplu = Scalar(155, 255, 255);
 
+//数字模板
+static vector<Mat> templates;
+string dir = "../template/";
+void initTmp() 
+{
+    if (!templates.empty()) return; // 防止重复加载
+
+    for (int i = 0; i < 10; i ++) {
+        string filename = dir + to_string(i) + ".png";
+        Mat templ = imread(filename, 0);
+        threshold(templ,templ,50,255,THRESH_BINARY);
+        imshow("T", templ);
+        if (templ.empty()) {
+            throw std::runtime_error("无法加载模板图像: " + filename);
+        }
+        templates.push_back(templ);
+    }
+    cout << "load 完成" << endl;
+}
+
 string calRang(Scalar& meanCor)
 {
     //造了一个像素点的图像，颜色就是那个平均值
@@ -90,7 +110,12 @@ void color(Mat orig, Mat gre)
     }
     Mat mask = Mat::zeros(orig.size(), CV_8U);//造个膜mask
     drawContours(mask, prfix_ps, idx, Scalar(255), FILLED);//填充为白色
-    imshow("mask", mask);
+    //imshow("mask", mask);
     Scalar meanCor = mean(orig, mask);//原图像计算颜色平均值
     cout << calRang(meanCor) << endl;
+}
+
+void digit(Mat orig)
+{
+    
 }

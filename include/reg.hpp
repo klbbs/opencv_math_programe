@@ -3,7 +3,8 @@
 #include <opencv2/opencv.hpp>
 using namespace cv;
 void color(Mat, Mat);
-
+void initTmp();
+void digit(Mat);
 
 
 #endif
