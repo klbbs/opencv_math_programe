@@ -18,19 +18,17 @@ int main(){
         video.read(frame);
         Mat binary;
         threshold(frame, binary, 127, 255, THRESH_BINARY);
-        Mat kernel = getStructuringElement(MORPH_RECT, Size(2, 2));
-        Mat dilated;
-        dilate(binary, dilated, kernel);
-        imshow("dil",dilated);
-        /*把视频或者你摄像头获得的赋值到图片,因为这个程序主要是对图片进行处理判断,但是好像
-         会有些小问题,后面会找机会优化的,这只是初版的程序*/
-        GaussianBlur(dilated,dilated,Size(5,5),0,0);//高斯模糊处理噪点
+        //Mat kernel = getStructuringElement(MORPH_RECT, Size(2, 2));
+        //Mat dilated;
+        //dilate(binary, dilated, kernel);
+        //imshow("dil",dilated);
+        GaussianBlur(frame,frame,Size(5,5),0,0);//高斯模糊处理噪点
         Mat im2;
-        cvtColor(dilated,im2,6);//原图像转换灰度图像
+        cvtColor(frame,im2,6);//原图像转换灰度图像
         if(clock == 20)
         {
             digit(im2);
-            color(dilated,im2);
+            color(frame,im2);
             clock %= 20;
         }
         clock ++;
