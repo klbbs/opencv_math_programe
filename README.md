@@ -2,7 +2,7 @@
 
 ## 方法：
     ```
-    cd math
+    cd 克隆下来的目录
     mkdir build
     cd build
     cmake ..
