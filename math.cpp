@@ -13,16 +13,20 @@ int main(){
     initTmp();
     double area = 1000;
     int clock = 20;
+    //int a,b,c,d;
+    //cin>>a>>b>>c>>d;
+    //Rect roi(a,b,c,d);
     while(1){
         Mat frame;//这个是图片存储的一种格式,矩阵
         video.read(frame);
+        GaussianBlur(frame,frame,Size(5,5),0,0);//高斯模糊处理噪点
+        //frame = frame(roi);
         Mat binary;
         threshold(frame, binary, 127, 255, THRESH_BINARY);
         //Mat kernel = getStructuringElement(MORPH_RECT, Size(2, 2));
         //Mat dilated;
         //dilate(binary, dilated, kernel);
         //imshow("dil",dilated);
-        GaussianBlur(frame,frame,Size(5,5),0,0);//高斯模糊处理噪点
         Mat im2;
         cvtColor(frame,im2,6);//原图像转换灰度图像
         if(clock == 20)

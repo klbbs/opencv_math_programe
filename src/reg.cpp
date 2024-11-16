@@ -58,7 +58,7 @@ void initTmp()
             Rect tmp = boundingRect(tmprfx[i]);
             cout << tmp.height << ' ' << tmp.width << endl;
             templ = templ(tmp);
-            // imshow("de",templ);
+            imshow("de",templ);
             // waitKey(100);
         }
         threshold(templ,templ,20,255,THRESH_BINARY_INV);
