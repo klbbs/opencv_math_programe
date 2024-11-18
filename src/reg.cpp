@@ -140,11 +140,13 @@ void color(Mat orig, Mat gre)
 void digit(Mat orig)
 {
     Canny(orig,orig,50,200);
-    Mat kernel = getStructuringElement(MORPH_RECT, Size(3, 3));
+    Mat kernel = getStructuringElement(MORPH_RECT, Size(10, 10));
+    Mat kernel2 = getStructuringElement(MORPH_RECT, Size(10, 10));
     dilate(orig, orig, kernel);
     imshow("debu",orig);
     vector<vector<Point>>trg;
-    findContours(orig,trg,RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    vector<Vec4i>his;
+    findContours(orig,trg,his,RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
     double maxAre = -1;
     int tmpidx = -1;
     for(int i = 0; i < trg.size(); i ++)
@@ -160,15 +162,23 @@ void digit(Mat orig)
     if( tmpidx != -1)
     tmp = boundingRect(trg[tmpidx]);
     else cout << "发生错误!error!" << endl;
+    //666整了半天原来发现下面这段代码完全不需要
     //drawContours(orig,trg,tmpidx,FILLED);//不知道为什么没有填充
-    fillPoly(orig,trg,Scalar(255,0,0));
+    //fillPoly(orig,trg,Scalar(255,0,0));
+    //for(int i = 0; i < trg.size(); i ++)
+    //{
+    //    if(his[i][3] == -1)fillPoly(orig,trg[i],Scalar(255,0,0));
+    //}
+    erode(orig,orig,kernel2);
     Mat roi = orig(tmp);
     double Score = -1;
     int idx = -1;
     double maxScore = -1, minScore = -1;
     for(int i = 0; i < templates.size(); i ++)
     {
+        if(roi.empty() || templates[i].empty())return;
         resize(roi,roi,templates[i].size());
+        Mat kernel2 = getStructuringElement(MORPH_RECT, Size(9, 9));
         imshow("roi",roi);
         imshow("tmplate",templates[i]);
         Mat res;
