@@ -9,59 +9,29 @@ using namespace cv;
 //红1区间
 auto Mired1 = Scalar(0, 43, 221);
 auto Mared1 = Scalar(10, 255, 255);
-//我也不知道为什么红色有俩区间,所以这是红2区间
 auto Mired2 = Scalar(156, 43, 46);
 auto Mared2 = Scalar(230, 255, 255);
-//橙色区间
-auto Miorg = Scalar(11,43, 46);
-auto Maorg = Scalar(25, 255, 255);
 //绿色区间
 auto Migre = Scalar(35, 43, 46);
 auto Magre = Scalar(77, 255, 255);
-//青色区间,虽然我感觉青色要么像蓝色要么像绿色
 auto MiQin = Scalar(35, 43, 46);
 auto MaQin = Scalar(99, 255, 255);
-//蓝色区间
-auto Miblu = Scalar(100, 43, 46);
-auto Mablu = Scalar(124, 255, 255);
-//紫色区间
-auto Miplu = Scalar(125, 43, 46);
-auto Maplu = Scalar(155, 255, 255);
 
 //数字模板
 static vector<Mat> templates;
-string dir = "../template/";
+string dir = "../template/digit_";
 void initTmp() 
 {
     if (!templates.empty()) return; // 防止重复加载
-
     for (int i = 0; i < 10; i ++) {
         string filename = dir + to_string(i) + ".png";
         Mat templ = imread(filename, 0);
+        threshold(templ, templ, 127, 255, THRESH_BINARY_INV);
         vector<vector<Point>>tmprfx;
-        Mat cny;
-        Canny(templ,cny,50,200);
-        findContours(cny,tmprfx, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+        findContours(templ,tmprfx, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
         waitKey(100);
-        Mat kernel = getStructuringElement(MORPH_RECT, Size(3, 3));
-        dilate(cny, cny, kernel);
-        //fillPoly(templ,tmprfx,Scalar(255,0,0));
-        double area = -1;
-        int idx = -1;
-        for(int i = 0; i < tmprfx.size(); i ++)
-        {
-            if(area < contourArea(tmprfx[i]))
-            {
-                area = contourArea(tmprfx[i]);
-                idx = i;
-            }
-            Rect tmp = boundingRect(tmprfx[i]);
-            cout << tmp.height << ' ' << tmp.width << endl;
-            templ = templ(tmp);
-            imshow("de",templ);
-            // waitKey(100);
-        }
-        threshold(templ,templ,20,255,THRESH_BINARY_INV);
+        Rect tmp = boundingRect(tmprfx[0]);
+        templ = templ(tmp);
         imshow("debug",templ);
         templates.push_back(templ);
     }
@@ -77,34 +47,13 @@ string calRang(Scalar& meanCor)
     cout << endl;
     Mat mask;
     inRange(colorMat, Mired1, Mared1, mask);
-    // for(int i = 0; i < 3; i ++)cout << mask << ' ';
-
-    // return "DEBUG";
     if(mask.at<uchar>(0, 0) == 255)return "红色";
     inRange(colorMat, Mired2, Mared2, mask);
     if(mask.at<uchar>(0, 0) == 255)return "红色";
-    inRange(colorMat, Miorg, Maorg, mask);
-    if(mask.at<uchar>(0,0) == 255)return "橙色";
     inRange(colorMat, Migre, Magre, mask);
-    if(mask.at<uchar>(0,0) == 255)return "绿色";
+    if(mask.at<uchar>(0,0) == 255)return "青色/绿色";
     inRange(colorMat, MiQin, MaQin, mask);
-    if(mask.at<uchar>(0,0) == 255)return "青色";
-    inRange(colorMat, Miblu, Mablu, mask);
-    if(mask.at<uchar>(0,0) == 255)return "蓝色";
-    inRange(colorMat, Miplu, Maplu, mask);
-    if(mask.at<uchar>(0,0) == 255)return "紫色";
-    return "UnKown!";
-
-    // cv::Mat colorMat(1, 1, CV_8UC3, meanCor);
-    // cv::Mat mask;
-
-    // for (const auto& [lower, upper, colorName] : colorRanges) 
-    // {
-    //     cv::inRange(colorMat, lower, upper, mask);
-    //     if (mask.at<uchar>(0, 0) == 255) {
-    //         return colorName;  // 如果匹配到范围，就返回颜色名
-    //     }
-    // }
+    if(mask.at<uchar>(0,0) == 255)return "青色/绿色";
 
     return "Unknown!";  // 如果没有匹配到任何颜色范围
 }
@@ -137,13 +86,12 @@ void color(Mat orig, Mat gre)
     cout << calRang(meanCor) << endl;
 }
 
-void digit(Mat orig)
+int digit(Mat orig)
 {
-    Canny(orig,orig,50,200);
-    Mat kernel = getStructuringElement(MORPH_RECT, Size(10, 10));
-    Mat kernel2 = getStructuringElement(MORPH_RECT, Size(10, 10));
-    dilate(orig, orig, kernel);
-    imshow("debu",orig);
+    Mat ker_dil = getStructuringElement(MORPH_RECT, Size(80,80));
+    Mat ker_ero = getStructuringElement(MORPH_RECT, Size(30,30));
+    dilate(orig, orig, ker_dil);
+    imshow("dil",orig);
     vector<vector<Point>>trg;
     vector<Vec4i>his;
     findContours(orig,trg,his,RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
@@ -157,38 +105,28 @@ void digit(Mat orig)
             tmpidx = i;
         }
     }
-    cout << trg.size() << endl;
     Rect tmp;
     if( tmpidx != -1)
     tmp = boundingRect(trg[tmpidx]);
     else cout << "发生错误!error!" << endl;
-    //666整了半天原来发现下面这段代码完全不需要
-    //drawContours(orig,trg,tmpidx,FILLED);//不知道为什么没有填充
-    //fillPoly(orig,trg,Scalar(255,0,0));
-    //for(int i = 0; i < trg.size(); i ++)
-    //{
-    //    if(his[i][3] == -1)fillPoly(orig,trg[i],Scalar(255,0,0));
-    //}
-    erode(orig,orig,kernel2);
+    erode(orig,orig,ker_ero);
     Mat roi = orig(tmp);
-    double Score = -1;
+    imshow("roi",roi);
+    double score = -1;
     int idx = -1;
     double maxScore = -1, minScore = -1;
-    for(int i = 0; i < templates.size(); i ++)
-    {
-        if(roi.empty() || templates[i].empty())return;
-        resize(roi,roi,templates[i].size());
-        Mat kernel2 = getStructuringElement(MORPH_RECT, Size(9, 9));
-        imshow("roi",roi);
-        imshow("tmplate",templates[i]);
+    for (int i = 0; i < templates.size(); i++) {
+        if (roi.empty() || templates[i].empty()) continue;
+        Mat resizedRoi;
+        resize(roi, resizedRoi, templates[i].size());
         Mat res;
-        matchTemplate(roi,templates[i],res,TM_CCOEFF_NORMED);
-        minMaxLoc(res,&minScore,&maxScore);
-        if(Score < maxScore)
-        {
-            Score = maxScore;
+        matchTemplate(resizedRoi, templates[i], res, TM_CCOEFF_NORMED);
+        minMaxLoc(res, &minScore, &maxScore);
+        if (score < maxScore) {
+            score = maxScore;
             idx = i;
         }
     }
-    cout << "这个数字是：" << idx << endl;
+    if (idx != -1)
+        cout << "识别的数字是：" << idx << endl;
 }
