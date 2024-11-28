@@ -12,7 +12,8 @@ Scalar Mired2(170, 100, 100), Mared2(180, 255, 255);
 Scalar Migre(35, 50, 50), Magre(85, 255, 255);
 Scalar MiQin(85, 50, 50), MaQin(170, 255, 255);
 
-
+int lastNumber = -1;
+double last = -1;
 //数字模板
 static vector<Mat> templates;
 string dir = "../template/digit_";
@@ -125,6 +126,9 @@ void digit(Mat orig)
             idx = i;
         }
     }
-    if (idx != -1)
+    if (idx != -1 && last >= score)
         cout << "识别的数字是：" << idx << endl;
+    else cout << "识别的数字是: " << lastNumber << endl;
+    last = score;
+    lastNumber = idx;
 }
