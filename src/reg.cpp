@@ -5,17 +5,13 @@
 using namespace std;
 using namespace cv;
 
-//各个颜色HSV区间
-//红1区间
-auto Mired1 = Scalar(0, 43, 221);
-auto Mared1 = Scalar(10, 255, 255);
-auto Mired2 = Scalar(156, 43, 46);
-auto Mared2 = Scalar(230, 255, 255);
-//绿色区间
-auto Migre = Scalar(35, 43, 46);
-auto Magre = Scalar(77, 255, 255);
-auto MiQin = Scalar(35, 43, 46);
-auto MaQin = Scalar(99, 255, 255);
+Scalar Mired1(0, 100, 100), Mared1(10, 255, 255);
+Scalar Mired2(170, 100, 100), Mared2(180, 255, 255);
+
+
+Scalar Migre(35, 50, 50), Magre(85, 255, 255);
+Scalar MiQin(85, 50, 50), MaQin(170, 255, 255);
+
 
 //数字模板
 static vector<Mat> templates;
@@ -84,7 +80,7 @@ void color(Mat orig, Mat bin)
     //Mat mask = Mat::zeros(orig.size(), CV_8U);
     //drawContours(mask, prfix_ps, idx, Scalar(255), FILLED);
     //imshow("mask",mask);
-    Scalar meanCor = mean(orig);
+    Scalar meanCor = mean(orig,bin);
     cout << calRang(meanCor) << endl;
 }
 
