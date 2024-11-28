@@ -29,10 +29,9 @@ void initTmp()
         threshold(templ, templ, 127, 255, THRESH_BINARY_INV);
         vector<vector<Point>>tmprfx;
         findContours(templ,tmprfx, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-        waitKey(100);
         Rect tmp = boundingRect(tmprfx[0]);
         templ = templ(tmp);
-        imshow("debug",templ);
+        //imshow("debug",templ);
         templates.push_back(templ);
     }
     cout << "load 完成" << endl;
@@ -40,7 +39,6 @@ void initTmp()
 
 string calRang(Scalar& meanCor)
 {
-    //造了一个像素点的图像，颜色就是那个平均值
     Mat colorMat(1, 1, CV_8UC3, meanCor);
     cvtColor(colorMat,colorMat,COLOR_BGR2HSV);
     for(int i = 0; i < 3; i ++)cout << meanCor[i] << ' ';
@@ -55,21 +53,17 @@ string calRang(Scalar& meanCor)
     inRange(colorMat, MiQin, MaQin, mask);
     if(mask.at<uchar>(0,0) == 255)return "青色/绿色";
 
-    return "Unknown!";  // 如果没有匹配到任何颜色范围
+    return "Unknown!";
 }
 
-void color(Mat orig, Mat gre)
+void color(Mat orig, Mat bin)
 {
-    Mat prfix;
-    Canny(gre, prfix, 150, 250);
-    Mat kernel = getStructuringElement(MORPH_RECT, Size(3, 3));
-    dilate(prfix, prfix, kernel);
-    //存轮廓点，到时候就处理这些轮廓
+    Mat kernel = getStructuringElement(MORPH_RECT, Size(10, 10));
+    dilate(bin, bin, kernel);
     vector<vector<Point>>prfix_ps;
-    findContours(prfix, prfix_ps, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-    //找到最大的面积作为要处理的图像
+    findContours(bin, prfix_ps, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
     double maxAre = -1;
-    int idx = -1; //记录在容器里的下标
+    int idx = -1;
     for(int i = 0; i < prfix_ps.size(); i ++)
     {
         double area = contourArea(prfix_ps[i]);
@@ -79,19 +73,27 @@ void color(Mat orig, Mat gre)
             maxAre = area;
         }
     }
-    Mat mask = Mat::zeros(orig.size(), CV_8U);//造个膜mask
-    drawContours(mask, prfix_ps, idx, Scalar(255), FILLED);//填充为白色
-    imshow("mask", mask);
-    Scalar meanCor = mean(orig, mask);//原图像计算颜色平均值
+    Rect roi = boundingRect(prfix_ps[idx]);
+    orig = orig(roi);
+    bin = bin(roi);
+    imshow("bin",bin);
+    GaussianBlur(orig,orig,Size(21,21),0,0);
+    Mat ker_org = getStructuringElement(MORPH_RECT, Size(45,45));
+    dilate(orig,orig,ker_org);
+    imshow("colorDebug", orig);
+    //Mat mask = Mat::zeros(orig.size(), CV_8U);
+    //drawContours(mask, prfix_ps, idx, Scalar(255), FILLED);
+    //imshow("mask",mask);
+    Scalar meanCor = mean(orig);
     cout << calRang(meanCor) << endl;
 }
 
-int digit(Mat orig)
+void digit(Mat orig)
 {
     Mat ker_dil = getStructuringElement(MORPH_RECT, Size(80,80));
     Mat ker_ero = getStructuringElement(MORPH_RECT, Size(30,30));
     dilate(orig, orig, ker_dil);
-    imshow("dil",orig);
+    //imshow("dil",orig);
     vector<vector<Point>>trg;
     vector<Vec4i>his;
     findContours(orig,trg,his,RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
@@ -111,7 +113,7 @@ int digit(Mat orig)
     else cout << "发生错误!error!" << endl;
     erode(orig,orig,ker_ero);
     Mat roi = orig(tmp);
-    imshow("roi",roi);
+    //imshow("roi",roi);
     double score = -1;
     int idx = -1;
     double maxScore = -1, minScore = -1;

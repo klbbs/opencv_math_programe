@@ -16,5 +16,5 @@ add_library(reg STATIC ${allsrc})
 target_link_libraries(reg ${OpenCV_LIBS})
 
 # 定义可执行文件并链接到库 reg
-add_executable(aVideoTest math.cpp)
+add_executable(aVideoTest main.cpp)
 target_link_libraries(aVideoTest reg ${OpenCV_LIBS})
