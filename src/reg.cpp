@@ -12,6 +12,9 @@ Scalar Mired2(170, 100, 100), Mared2(180, 255, 255);
 Scalar Migre(35, 50, 50), Magre(85, 255, 255);
 Scalar MiQin(85, 50, 50), MaQin(170, 255, 255);
 
+//为了处理像1这种部诗人数字
+int maxWidth = 0, maxHeight = 0;
+
 int lastNumber = -1;
 double last = -1;
 //数字模板
@@ -23,6 +26,7 @@ void initTmp()
     for (int i = 0; i < 10; i ++) {
         string filename = dir + to_string(i) + ".png";
         Mat templ = imread(filename, 0);
+        //cout << "tp_size: " << templ.size() << endl;
         threshold(templ, templ, 127, 255, THRESH_BINARY_INV);
         vector<vector<Point>>tmprfx;
         findContours(templ,tmprfx, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
@@ -107,17 +111,35 @@ void digit(Mat orig)
     Rect tmp;
     if( tmpidx != -1)
     tmp = boundingRect(trg[tmpidx]);
-    else cout << "发生错误!error!" << endl;
+    else 
+        cout << "发生错误!error!" << endl;
     erode(orig,orig,ker_ero);
     Mat roi = orig(tmp);
-    //imshow("roi",roi);
+    if(roi.cols < maxWidth || roi.rows < maxHeight)
+    {
+    int top = (maxHeight - roi.rows) / 2;
+    int bottom = maxHeight - roi.rows - top;
+    int left = (maxWidth - roi.cols) / 2;
+    int right = maxWidth - roi.cols - left;
+    if(top < 0)top = 0;
+    if(bottom < 0)bottom = 0;
+    if(left < 0)left = 0;
+    if(right < 0)right = 0;
+
+        copyMakeBorder(roi,roi,top,bottom,left,right,BORDER_CONSTANT, Scalar(0,0,0));
+    }
+    maxHeight = roi.rows, maxWidth = roi.cols;
+    //cout << "rect_size: " << tmp.size() << endl;
+    imshow("roi",roi);
+    //cout << "roi_size: " << roi.size() << endl;
     double score = -1;
     int idx = -1;
     double maxScore = -1, minScore = -1;
     for (int i = 0; i < templates.size(); i++) {
         if (roi.empty() || templates[i].empty()) continue;
         Mat resizedRoi;
-        resize(roi, resizedRoi, templates[i].size());
+        resize(roi , resizedRoi, templates[i].size());
+        //cout << "temp_size: " << templates[i].size() << endl;
         Mat res;
         matchTemplate(resizedRoi, templates[i], res, TM_CCOEFF_NORMED);
         minMaxLoc(res, &minScore, &maxScore);

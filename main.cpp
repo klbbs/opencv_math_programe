@@ -15,11 +15,13 @@ int main(){
         GaussianBlur(frame,frame,Size(5,5),0,0);
         Mat gre,binary;
         cvtColor(frame,gre,6);
-        threshold(gre, binary, 175, 255, THRESH_BINARY);
+        threshold(gre, binary, 100, 255, THRESH_BINARY);
         imshow("bin",binary);
+        //数字
         digit(binary);
+        //颜色
         color(frame,binary);
-        waitKey(60);
+        waitKey(3);
     }
     return 0;
 }
