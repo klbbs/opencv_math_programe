@@ -2,9 +2,9 @@
 #define __LODE__
 #include <opencv2/opencv.hpp>
 using namespace cv;
-void color(Mat, Mat);
+int color(Mat, Mat);
 void initTmp();
-void digit(Mat);
+int digit(Mat);
 
 
 #endif

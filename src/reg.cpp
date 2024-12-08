@@ -5,15 +5,17 @@
 using namespace std;
 using namespace cv;
 
-Scalar Mired1(0, 100, 100), Mared1(10, 255, 255);
+Scalar Mired1(0, 100, 100), Mared1(25, 255, 255);
 Scalar Mired2(170, 100, 100), Mared2(180, 255, 255);
 
 
 Scalar Migre(35, 50, 50), Magre(85, 255, 255);
 Scalar MiQin(85, 50, 50), MaQin(170, 255, 255);
 
-//为了处理像1这种部诗人数字
-int maxWidth = 0, maxHeight = 0;
+int way = 4;
+
+//为了处理像1这种剑直部诗人的数字
+int maxWidth = 500, maxHeight = 0;
 
 int lastNumber = -1;
 double last = -1;
@@ -38,7 +40,7 @@ void initTmp()
     cout << "load 完成" << endl;
 }
 
-string calRang(Scalar& meanCor)
+int calRang(Scalar& meanCor)
 {
     Mat colorMat(1, 1, CV_8UC3, meanCor);
     cvtColor(colorMat,colorMat,COLOR_BGR2HSV);
@@ -46,18 +48,18 @@ string calRang(Scalar& meanCor)
     cout << endl;
     Mat mask;
     inRange(colorMat, Mired1, Mared1, mask);
-    if(mask.at<uchar>(0, 0) == 255)return "红色";
+    if(mask.at<uchar>(0, 0) == 255)return 3;
     inRange(colorMat, Mired2, Mared2, mask);
-    if(mask.at<uchar>(0, 0) == 255)return "红色";
+    if(mask.at<uchar>(0, 0) == 255)return 3;
     inRange(colorMat, Migre, Magre, mask);
-    if(mask.at<uchar>(0,0) == 255)return "青色/绿色";
+    if(mask.at<uchar>(0,0) == 255)return 2;
     inRange(colorMat, MiQin, MaQin, mask);
-    if(mask.at<uchar>(0,0) == 255)return "青色/绿色";
+    if(mask.at<uchar>(0,0) == 255)return 1;
 
-    return "Unknown!";
+    return 3;
 }
 
-void color(Mat orig, Mat bin)
+int color(Mat orig, Mat bin)
 {
     Mat kernel = getStructuringElement(MORPH_RECT, Size(10, 10));
     dilate(bin, bin, kernel);
@@ -77,24 +79,26 @@ void color(Mat orig, Mat bin)
     Rect roi = boundingRect(prfix_ps[idx]);
     orig = orig(roi);
     bin = bin(roi);
-    imshow("bin",bin);
+    //imshow("bin",bin);
     GaussianBlur(orig,orig,Size(21,21),0,0);
     Mat ker_org = getStructuringElement(MORPH_RECT, Size(45,45));
     dilate(orig,orig,ker_org);
-    imshow("colorDebug", orig);
+    //imshow("colorDebug", orig);
     //Mat mask = Mat::zeros(orig.size(), CV_8U);
     //drawContours(mask, prfix_ps, idx, Scalar(255), FILLED);
     //imshow("mask",mask);
     Scalar meanCor = mean(orig,bin);
-    cout << calRang(meanCor) << endl;
+    return calRang(meanCor);
 }
 
-void digit(Mat orig)
+int digit(Mat orig)
 {
+    cout << orig.cols << ' ' << orig.rows << endl;
     Mat ker_dil = getStructuringElement(MORPH_RECT, Size(80,80));
     Mat ker_ero = getStructuringElement(MORPH_RECT, Size(30,30));
     dilate(orig, orig, ker_dil);
-    //imshow("dil",orig);
+    erode(orig,orig,ker_ero);
+    imshow("dil",orig);
     vector<vector<Point>>trg;
     vector<Vec4i>his;
     findContours(orig,trg,his,RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
@@ -113,7 +117,6 @@ void digit(Mat orig)
     tmp = boundingRect(trg[tmpidx]);
     else 
         cout << "发生错误!error!" << endl;
-    erode(orig,orig,ker_ero);
     Mat roi = orig(tmp);
     if(roi.cols < maxWidth || roi.rows < maxHeight)
     {
@@ -130,7 +133,6 @@ void digit(Mat orig)
     }
     maxHeight = roi.rows, maxWidth = roi.cols;
     //cout << "rect_size: " << tmp.size() << endl;
-    imshow("roi",roi);
     //cout << "roi_size: " << roi.size() << endl;
     double score = -1;
     int idx = -1;
@@ -141,16 +143,27 @@ void digit(Mat orig)
         resize(roi , resizedRoi, templates[i].size());
         //cout << "temp_size: " << templates[i].size() << endl;
         Mat res;
-        matchTemplate(resizedRoi, templates[i], res, TM_CCOEFF_NORMED);
+        matchTemplate(resizedRoi, templates[i], res, way);
+        //cout << "min: " << minScore << " max: " << maxScore << endl;
         minMaxLoc(res, &minScore, &maxScore);
         if (score < maxScore) {
             score = maxScore;
             idx = i;
         }
     }
-    if (idx != -1 && last >= score)
-        cout << "识别的数字是：" << idx << endl;
-    else cout << "识别的数字是: " << lastNumber << endl;
-    last = score;
-    lastNumber = idx;
+    if (idx != -1 && last < score)
+    {
+        last = score;
+        lastNumber = idx;
+        cout << "识别的数字是1：" << idx << endl;
+        return idx;
+    }
+    else if(idx == - 1)return 1;
+    else  
+    {
+        last = score;
+        lastNumber = idx;
+        cout << "识别的数字是2: " << lastNumber << endl;
+        return lastNumber;
+    }
 }

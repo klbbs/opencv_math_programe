@@ -5,6 +5,9 @@
 using namespace std;
 using namespace cv;
 
+
+int Thres_val = 100;
+
 int main(){
     VideoCapture video = VideoCapture("../test4.avi");
     initTmp();
@@ -12,16 +15,17 @@ int main(){
     while(1){
         Mat frame;
         video.read(frame);
+        imshow("frame",frame);
         GaussianBlur(frame,frame,Size(5,5),0,0);
         Mat gre,binary;
         cvtColor(frame,gre,6);
-        threshold(gre, binary, 100, 255, THRESH_BINARY);
+        threshold(gre, binary, Thres_val, 255, THRESH_BINARY);
         imshow("bin",binary);
+        waitKey(1);
         //数字
-        digit(binary);
+        int d = digit(binary);
         //颜色
-        color(frame,binary);
-        waitKey(3);
+        int c = color(frame,binary);
     }
     return 0;
 }
